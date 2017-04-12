@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# Usage: nimble restart ( <alias> | <service> )
+# Summary: Restart a running service
+# Help: Restart a running launchctl service.
+set -e
+
+source "${_NIMBLE_ROOT}/lib/common.sh"
+
+# Provide nimble completions
+if [ "$1" = "--complete" ]; then
+    get_aliases
+    get_services_labels
+    exit
+fi
+
+if [ $# -ne 1 ]; then
+    [ $# -gt 1 ] && echo "Error: Too many arguments." || \
+        echo "Error: Too few arguments."
+    echo "See the nimble help with the command:"
+    echo "  nimble help restart"
+    exit 1
+fi
+
+if is_alias $1; then
+    service=$(get_services_with_alias $1)
+    launchctl stop $service
+    launchctl start $service
+    echo "Restarted \"$1\" service."
+elif is_service $1; then
+    launchctl stop $1
+    launchctl start $1
+    echo "Restarted \"$1\" service."
+else
+    echo "Error: Couldn't find the service \"$1\"."
+    exit 1
+fi
+
