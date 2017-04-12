@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Usage: nimble remove <alias>
+# Summary: Remove a service's alias
+# Help: Remove the given launchctl service's alias.
+#
+# Command aliases: alias
+set -e
+
+source "${_NIMBLE_ROOT}/lib/common.sh"
+
+# Provide nimble completions
+if [ "$1" = "--complete" ]; then
+    get_aliases
+    exit
+fi
+
+if [ $# -ne 1 ]; then
+    [ $# -gt 1 ] && echo "Error: Too many arguments." || \
+        echo "Error: Too few arguments."
+    echo "See the nimble help with the command:"
+    echo "  nimble help remove"
+    exit 1
+fi
+
+if is_alias $1; then
+        sed -i.bak "/\(^$1=\).*$/d" ~/.nimble.map
+        echo "Alias \"$1\" was removed."
+else
+    echo "Alias \"$1\" doesn't exists. Notthing was removed."
+fi

@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# Usage: nimble add [--force] <service> <alias>
+# Summary: Add a new service's alias
+# Help: Add a new alias for a launchctl service.
+#
+# Options:
+#     --force    Override the alias if already exits.
+#
+# Command aliases: alias
+set -e
+
+source "${_NIMBLE_ROOT}/lib/common.sh"
+
+# Provide nimble completions
+if [ "$1" = "--complete" ]; then
+    if ! [ "$2" = "--force" ]; then
+        echo "--force"
+    fi
+    get_services_labels
+    exit
+fi
+
+force=""
+if [ "$1" = "--force" ]; then
+    force=1
+    shift
+fi
+
+if [ $# -ne 2 ]; then
+    [ $# -gt 2 ] && echo "Error: Too many arguments." || \
+        echo "Error: Too few arguments."
+    echo "See the nimble help with the command:"
+    echo "  nimble help add"
+    exit 1
+fi
+
+if is_alias $2; then
+    if [ -z $force ]; then
+        echo "Error: alias already exists. Use --force to override it."
+        exit 1
+    else
+        sed -i.bak "s/\(^$2=\).*$/\1$1/" ~/.nimble.map
+        echo "Added alias \"$2\" for service \"$1\"."
+    fi
+else
+    echo "$2=$1" >> ~/.nimble.map
+    echo "Added alias \"$2\" for service \"$1\"."
+fi

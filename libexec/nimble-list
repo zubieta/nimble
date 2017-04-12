@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# Usage: nimble list [--all] [<alias>...]
+# Summary: List nimble services
+# Help: List the launchctl services names with their aliases.
+#
+# Options:
+#     --all    Also show services without alias. If given
+#              other parameters are ignored.
+#
+# Command aliases: ls
+set -e
+
+source "${_NIMBLE_ROOT}/lib/common.sh"
+
+# Provide nimble completions
+if [ "$1" = "--complete" ]; then
+    echo "--all"
+    get_aliases
+    exit
+fi
+
+all=""
+if [ "$1" = "--all" ]; then
+    all=1
+    shift
+fi
+
+if [ -z $all ]; then
+    # Check that given aliases exists unless showing all
+    for _alias in $@; do
+        if ! is_alias $_alias; then
+            echo "Error: service with alias \"$_alias\" not found."
+            exit 1
+        fi
+    done
+fi
+
+print_services() {
+    echo "Service Alias"
+    if [ $# -eq 0 ] || [ -n "$all" ]; then
+        awk -F= '{print $2" "$1}' ~/.nimble.map | sort
+    else
+        for _alias in $@; do
+            echo $(get_alias_service $_alias) $_alias
+        done
+    fi
+    if [ -n "$all" ]; then
+        get_services_without_alias
+    fi
+}
+
+print_services $@ | column -t

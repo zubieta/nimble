@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+# Usage: nimble status [--all] [<alias>...] [<service>...]
+# Summary: Show the status of services
+# Help: Show the status of launchctl services.
+#
+# Options:
+#     --all    Include services without alias. If given all
+#              all other parameters are ignored.
+#
+# Command aliases: st
+set -e
+
+export services_list=""
+source "${_NIMBLE_ROOT}/lib/common.sh"
+services_list=$(get_services)
+
+# Provide nimble completions
+if [ "$1" = "--complete" ]; then
+    if ! [ "$2" = "--all" ]; then
+        echo "--all"
+    fi
+    get_aliases
+    get_services_labels
+    exit
+fi
+
+all=""
+if [ "$1" = "--all" ]; then
+    all=1
+    shift
+fi
+
+if [ -z $all ]; then
+    # Check that given aliases/services exists unless showing all
+    for _alias_or_service in $@; do
+        if is_alias $_alias_or_service; then
+            continue
+        elif is_service $_alias_or_service; then
+            continue
+        else
+            echo "Error: service or alias \"$_alias_or_service\" not found."
+            exit 1
+        fi
+    done
+fi
+
+
+print_services() {
+    local _service
+    echo "PID Status Service Alias"
+    if [ -z $all ]; then
+        if [ $# -eq 0 ]; then
+            for _alias in $(get_aliases); do
+                echo $(get_alias_status $_alias) $_alias
+            done
+        else
+            for _alias_or_service in $@; do
+                if is_alias $_alias_or_service; then
+                    echo $(get_alias_status $_alias_or_service) $_alias_or_service
+                elif is_service $_alias_or_service; then
+                    get_service_status $_alias_or_service
+                fi
+            done
+        fi
+    else
+        _aliases_status=$(for _alias in $(get_aliases); do
+                echo $(get_alias_status $_alias) $_alias
+            done | sort -k3)
+        echo "$_aliases_status"
+        comm -2 <(get_services | sort -k3) <(echo "$_aliases_status")
+    fi
+}
+
+print_services $@ | column -t
