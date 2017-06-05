@@ -8,8 +8,13 @@ source "${_NIMBLE_ROOT}/lib/common.sh"
 
 # Provide nimble completions
 if [ "$1" = "--complete" ]; then
+    if ! [ "$2" = "--all" ]; then
+        echo "--all"
+    fi
     get_aliases
-    get_services_labels
+    if [ "$2" = "--all" ]; then
+        get_services_labels
+    fi
     exit
 fi
 
