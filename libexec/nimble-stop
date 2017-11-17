@@ -27,7 +27,7 @@ if [ $# -ne 1 ]; then
 fi
 
 if is_alias $1; then
-    service=$(get_services_with_alias $1)
+    service=$(get_alias_service $1)
     launchctl stop $service
     echo "Stopped \"$1\" service."
 elif is_service $1; then
